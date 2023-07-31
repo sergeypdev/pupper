@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package pupper_test
 
 import (
@@ -142,22 +148,22 @@ func TestVersionUpgrade(t *testing.T) {
 		t.Errorf("Decoding V3 data with V2 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV2, expectedDataV2)
 	}
 
-  dataV1 = versionedData{}
-  dataV1.PupV1(pupper.Unpack(encodedDataV3))
+	dataV1 = versionedData{}
+	dataV1.PupV1(pupper.Unpack(encodedDataV3))
 
-  expectedDataV1 := versionedData{field: 1}
-  if dataV1 != expectedDataV1 {
+	expectedDataV1 := versionedData{field: 1}
+	if dataV1 != expectedDataV1 {
 		t.Errorf("Decoding V3 data with V1 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV1, expectedDataV1)
-  }
+	}
 }
 
 func BenchmarkPupper(b *testing.B) {
-  var d data
-  size := d.Pup(pupper.Count())
-  bytes := make([]byte, size)
-  for i := 0; i < b.N; i++ {
-    for j := 0; j < 1000; j++ {
-      d.Pup(pupper.Pack(bytes))
-    }
-  }
+	var d data
+	size := d.Pup(pupper.Count())
+	bytes := make([]byte, size)
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 1000; j++ {
+			d.Pup(pupper.Pack(bytes))
+		}
+	}
 }
