@@ -1,3 +1,6 @@
+// Pupper! (Packer/Unpacker)
+// You can use Pupper to pack or unpack your
+// data, by writing a single Pup function.
 package pupper
 
 import (
@@ -5,22 +8,60 @@ import (
 	"math"
 )
 
-type Pupper struct {
+// Main struct used by this module.
+// It contains data and configuration required
+// to pack or unpack your data.
+type P struct {
 	Unpack    bool
 	BigEndian bool
 	Data      []byte
 	Cursor    int
 }
 
-func (p *Pupper) Len() int {
+// Use this Pupper to count number of bytes
+// you need to pack your data.
+//
+// Pupper will never allocate data for you, use pupper.Count()
+// to check how many bytes you need and allocate them yourself.
+func Count() P {
+  return P{}
+}
+
+// Use this Pupper to pack your data using little endian.
+//
+// Pupper will never allocate data for you, use pupper.Count()
+// to check how many bytes you need and allocate them yourself.
+func PackLittleEndian(data []byte) P {
+  return P{Data: data}
+}
+
+// Use this Pupper to unpack your data packed as little endian.
+func UnpackLittleEndian(data []byte) P {
+  return P{Unpack: true, Data: data}
+}
+
+// Use this Pupper to pack your data using big endian.
+//
+// Pupper will never allocate data for you, use pupper.Count()
+// to check how many bytes you need and allocate them yourself.
+func PackBigEndian(data []byte) P {
+  return P{Data: data, BigEndian: true}
+}
+
+// Use this Pupper to unpack your data packed as big endian.
+func UnpackBigEndian(data []byte) P {
+  return P{Unpack: true, Data: data, BigEndian: true}
+}
+
+func (p *P) Len() int {
 	return p.Cursor
 }
 
-func (p *Pupper) enoughLength(requiredLength int) bool {
+func (p *P) enoughLength(requiredLength int) bool {
 	return p.Data != nil && len(p.Data[p.Cursor:]) >= requiredLength
 }
 
-func (p *Pupper) Int8(value *int8) {
+func (p *P) Int8(value *int8) {
 	if p.enoughLength(1) {
 		if p.Unpack {
 			*value = int8(p.Data[p.Cursor])
@@ -31,7 +72,7 @@ func (p *Pupper) Int8(value *int8) {
 	p.Cursor += 1
 }
 
-func (p *Pupper) Uint8(value *uint8) {
+func (p *P) Uint8(value *uint8) {
 	if p.enoughLength(1) {
 		if p.Unpack {
 			*value = p.Data[p.Cursor]
@@ -42,7 +83,7 @@ func (p *Pupper) Uint8(value *uint8) {
 	p.Cursor += 1
 }
 
-func (p *Pupper) Int16(value *int16) {
+func (p *P) Int16(value *int16) {
 	if p.enoughLength(2) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -60,7 +101,7 @@ func (p *Pupper) Int16(value *int16) {
 	}
 	p.Cursor += 2
 }
-func (p *Pupper) Uint16(value *uint16) {
+func (p *P) Uint16(value *uint16) {
 	if p.enoughLength(2) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -79,7 +120,7 @@ func (p *Pupper) Uint16(value *uint16) {
 	p.Cursor += 2
 }
 
-func (p *Pupper) Int32(value *int32) {
+func (p *P) Int32(value *int32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -97,7 +138,7 @@ func (p *Pupper) Int32(value *int32) {
 	}
 	p.Cursor += 4
 }
-func (p *Pupper) Uint32(value *uint32) {
+func (p *P) Uint32(value *uint32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -116,7 +157,7 @@ func (p *Pupper) Uint32(value *uint32) {
 	p.Cursor += 4
 }
 
-func (p *Pupper) Int64(value *int64) {
+func (p *P) Int64(value *int64) {
 	if p.enoughLength(8) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -134,7 +175,7 @@ func (p *Pupper) Int64(value *int64) {
 	}
 	p.Cursor += 8
 }
-func (p *Pupper) Uint64(value *uint64) {
+func (p *P) Uint64(value *uint64) {
 	if p.enoughLength(8) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -153,7 +194,7 @@ func (p *Pupper) Uint64(value *uint64) {
 	p.Cursor += 8
 }
 
-func (p *Pupper) Float32(value *float32) {
+func (p *P) Float32(value *float32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -172,7 +213,7 @@ func (p *Pupper) Float32(value *float32) {
 	p.Cursor += 4
 }
 
-func (p *Pupper) Float64(value *float64) {
+func (p *P) Float64(value *float64) {
 	if p.enoughLength(8) {
 		if p.Unpack {
 			if p.BigEndian {
@@ -191,7 +232,7 @@ func (p *Pupper) Float64(value *float64) {
 	p.Cursor += 8
 }
 
-func (p *Pupper) Bytes(value []byte) {
+func (p *P) Bytes(value []byte) {
 	if p.Unpack {
 		p.Cursor += copy(value, p.Data)
 	} else {

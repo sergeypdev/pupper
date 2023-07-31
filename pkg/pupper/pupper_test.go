@@ -1,8 +1,10 @@
-package pupper
+package pupper_test
 
 import (
 	"math"
 	"testing"
+
+	"github.com/sergeypdev/pupper/pkg/pupper"
 )
 
 type data struct {
@@ -18,7 +20,7 @@ type data struct {
 	f64 float64
 }
 
-func (d *data) Pup(p *Pupper) int {
+func (d *data) Pup(p pupper.P) int {
 	p.Int8(&d.i8)
 	p.Uint8(&d.u8)
 	p.Int16(&d.i16)
@@ -33,8 +35,6 @@ func (d *data) Pup(p *Pupper) int {
 }
 
 func TestCalcLength(t *testing.T) {
-	p := Pupper{}
-
 	result := data{
 		i8:  -50,
 		u8:  math.MaxUint8,
@@ -49,22 +49,17 @@ func TestCalcLength(t *testing.T) {
 	}
 
 	// Calculate size, not writing anything yet
-	dataLen := result.Pup(&p)
+	dataLen := result.Pup(pupper.Count())
 
 	encodedBytes := make([]byte, dataLen)
-	p = Pupper{
-		Data: encodedBytes,
-	}
+  p := pupper.PackLittleEndian(encodedBytes)
 	// Encoding
-	result.Pup(&p)
+	result.Pup(p)
 
 	var result2 data
-	p = Pupper{
-		Unpack: true,
-		Data:   encodedBytes,
-	}
+	p = pupper.UnpackLittleEndian(encodedBytes)
 	// Decoding
-	result2.Pup(&p)
+	result2.Pup(p)
 
 	if result != result2 {
 		t.Errorf("Decoding the encoded value yields a different result\nEncoded:\t%v\nDecoded:\t%v\n", result, result2)
@@ -80,7 +75,7 @@ type versionedData struct {
 // These will not be separate functions, simulating data format
 // evolution over time. In real projects you would have only one Pup()
 // function that is the latest version
-func (vd *versionedData) PupV1(p *Pupper) int {
+func (vd *versionedData) PupV1(p pupper.P) int {
 	// Specify current version
 	version := uint32(1)
 	p.Uint32(&version)
@@ -88,7 +83,7 @@ func (vd *versionedData) PupV1(p *Pupper) int {
 	return p.Len()
 }
 
-func (vd *versionedData) PupV2(p *Pupper) int {
+func (vd *versionedData) PupV2(p pupper.P) int {
 	// Specify current version
 	version := uint32(2)
 	p.Uint32(&version)
@@ -99,7 +94,7 @@ func (vd *versionedData) PupV2(p *Pupper) int {
 	return p.Len()
 }
 
-func (vd *versionedData) PupV3(p *Pupper) int {
+func (vd *versionedData) PupV3(p pupper.P) int {
 	// Specify current version
 	version := uint32(3)
 	p.Uint32(&version)
@@ -117,39 +112,35 @@ func TestVersionUpgrade(t *testing.T) {
 	dataV1 := versionedData{
 		field: 1,
 	}
-	encodedDataV1 := make([]byte, dataV1.PupV1(&Pupper{}))
-	dataV1.PupV1(&Pupper{
-		Data: encodedDataV1,
-	})
+	encodedDataV1 := make([]byte, dataV1.PupV1(pupper.Count()))
+	dataV1.PupV1(pupper.PackLittleEndian(encodedDataV1))
 
 	var dataV2 versionedData
-	dataV2.PupV2(&Pupper{Unpack: true, Data: encodedDataV1})
+	dataV2.PupV2(pupper.UnpackLittleEndian(encodedDataV1))
 
 	if dataV1 != dataV2 {
 		t.Errorf("Decoding V1 data with V2 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV1, dataV2)
 	}
 
 	dataV2.fieldAddedV2 = 2
-	encodedDataV2 := make([]byte, dataV2.PupV2(&Pupper{}))
-	dataV2.PupV2(&Pupper{
-		Data: encodedDataV2,
-	})
+	encodedDataV2 := make([]byte, dataV2.PupV2(pupper.Count()))
+	dataV2.PupV2(pupper.PackLittleEndian(encodedDataV2))
 
 	var dataV3 versionedData
-	dataV3.PupV3(&Pupper{Unpack: true, Data: encodedDataV2})
+	dataV3.PupV3(pupper.UnpackLittleEndian(encodedDataV2))
 
 	if dataV2 != dataV3 {
 		t.Errorf("Decoding V2 data with V3 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV2, dataV3)
 	}
 
 	dataV3.fieldAddedV3 = 3
-	encodedDataV3 := make([]byte, dataV3.PupV3(&Pupper{}))
-	dataV3.PupV3(&Pupper{Data: encodedDataV3})
+	encodedDataV3 := make([]byte, dataV3.PupV3(pupper.Count()))
+	dataV3.PupV3(pupper.PackLittleEndian(encodedDataV3))
 
 	// Checking backwards compat
 
 	dataV2 = versionedData{}
-	dataV2.PupV2(&Pupper{Unpack: true, Data: encodedDataV3})
+	dataV2.PupV2(pupper.UnpackLittleEndian(encodedDataV3))
 
 	expectedDataV2 := versionedData{field: 1, fieldAddedV2: 2}
 	if dataV2 != expectedDataV2 {
@@ -157,7 +148,7 @@ func TestVersionUpgrade(t *testing.T) {
 	}
 
   dataV1 = versionedData{}
-  dataV1.PupV1(&Pupper{Unpack: true, Data: encodedDataV3})
+  dataV1.PupV1(pupper.UnpackLittleEndian(encodedDataV3))
 
   expectedDataV1 := versionedData{field: 1}
   if dataV1 != expectedDataV1 {
