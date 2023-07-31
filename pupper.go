@@ -12,10 +12,9 @@ import (
 // It contains data and configuration required
 // to pack or unpack your data.
 type P struct {
-	Unpack    bool
-	BigEndian bool
-	Data      []byte
-	Cursor    int
+	Unpack bool
+	Data   []byte
+	Cursor int
 }
 
 // Use this Pupper to count number of bytes
@@ -24,33 +23,20 @@ type P struct {
 // Pupper will never allocate data for you, use pupper.Count()
 // to check how many bytes you need and allocate them yourself.
 func Count() P {
-  return P{}
+	return P{}
 }
 
-// Use this Pupper to pack your data using little endian.
+// Use this Pupper to pack your data.
 //
 // Pupper will never allocate data for you, use pupper.Count()
 // to check how many bytes you need and allocate them yourself.
-func PackLittleEndian(data []byte) P {
-  return P{Data: data}
+func Pack(data []byte) P {
+	return P{Data: data}
 }
 
-// Use this Pupper to unpack your data packed as little endian.
-func UnpackLittleEndian(data []byte) P {
-  return P{Unpack: true, Data: data}
-}
-
-// Use this Pupper to pack your data using big endian.
-//
-// Pupper will never allocate data for you, use pupper.Count()
-// to check how many bytes you need and allocate them yourself.
-func PackBigEndian(data []byte) P {
-  return P{Data: data, BigEndian: true}
-}
-
-// Use this Pupper to unpack your data packed as big endian.
-func UnpackBigEndian(data []byte) P {
-  return P{Unpack: true, Data: data, BigEndian: true}
+// Use this Pupper to unpack your data.
+func Unpack(data []byte) P {
+	return P{Unpack: true, Data: data}
 }
 
 func (p *P) Len() int {
@@ -83,150 +69,177 @@ func (p *P) Uint8(value *uint8) {
 	p.Cursor += 1
 }
 
-func (p *P) Int16(value *int16) {
+// Little Endian
+
+func (p *P) Int16LE(value *int16) {
 	if p.enoughLength(2) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = int16(binary.BigEndian.Uint16(p.Data[p.Cursor:]))
-			} else {
-				*value = int16(binary.LittleEndian.Uint16(p.Data[p.Cursor:]))
-			}
+			*value = int16(binary.LittleEndian.Uint16(p.Data[p.Cursor:]))
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint16(p.Data[p.Cursor:], uint16(*value))
-			} else {
-				binary.LittleEndian.PutUint16(p.Data[p.Cursor:], uint16(*value))
-			}
+			binary.LittleEndian.PutUint16(p.Data[p.Cursor:], uint16(*value))
 		}
 	}
 	p.Cursor += 2
 }
-func (p *P) Uint16(value *uint16) {
+func (p *P) Uint16LE(value *uint16) {
 	if p.enoughLength(2) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = binary.BigEndian.Uint16(p.Data[p.Cursor:])
-			} else {
-				*value = binary.LittleEndian.Uint16(p.Data[p.Cursor:])
-			}
+			*value = binary.LittleEndian.Uint16(p.Data[p.Cursor:])
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint16(p.Data[p.Cursor:], *value)
-			} else {
-				binary.LittleEndian.PutUint16(p.Data[p.Cursor:], *value)
-			}
+			binary.LittleEndian.PutUint16(p.Data[p.Cursor:], *value)
 		}
 	}
 	p.Cursor += 2
 }
 
-func (p *P) Int32(value *int32) {
+func (p *P) Int32LE(value *int32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = int32(binary.BigEndian.Uint32(p.Data[p.Cursor:]))
-			} else {
-				*value = int32(binary.LittleEndian.Uint32(p.Data[p.Cursor:]))
-			}
+			*value = int32(binary.LittleEndian.Uint32(p.Data[p.Cursor:]))
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint32(p.Data[p.Cursor:], uint32(*value))
-			} else {
-				binary.LittleEndian.PutUint32(p.Data[p.Cursor:], uint32(*value))
-			}
+			binary.LittleEndian.PutUint32(p.Data[p.Cursor:], uint32(*value))
 		}
 	}
 	p.Cursor += 4
 }
-func (p *P) Uint32(value *uint32) {
+func (p *P) Uint32LE(value *uint32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = binary.BigEndian.Uint32(p.Data[p.Cursor:])
-			} else {
-				*value = binary.LittleEndian.Uint32(p.Data[p.Cursor:])
-			}
+			*value = binary.LittleEndian.Uint32(p.Data[p.Cursor:])
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint32(p.Data[p.Cursor:], *value)
-			} else {
-				binary.LittleEndian.PutUint32(p.Data[p.Cursor:], *value)
-			}
+			binary.LittleEndian.PutUint32(p.Data[p.Cursor:], *value)
 		}
 	}
 	p.Cursor += 4
 }
 
-func (p *P) Int64(value *int64) {
+func (p *P) Int64LE(value *int64) {
 	if p.enoughLength(8) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = int64(binary.BigEndian.Uint64(p.Data[p.Cursor:]))
-			} else {
-				*value = int64(binary.LittleEndian.Uint64(p.Data[p.Cursor:]))
-			}
+			*value = int64(binary.LittleEndian.Uint64(p.Data[p.Cursor:]))
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint64(p.Data[p.Cursor:], uint64(*value))
-			} else {
-				binary.LittleEndian.PutUint64(p.Data[p.Cursor:], uint64(*value))
-			}
-		}
-	}
-	p.Cursor += 8
-}
-func (p *P) Uint64(value *uint64) {
-	if p.enoughLength(8) {
-		if p.Unpack {
-			if p.BigEndian {
-				*value = binary.BigEndian.Uint64(p.Data[p.Cursor:])
-			} else {
-				*value = binary.LittleEndian.Uint64(p.Data[p.Cursor:])
-			}
-		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint64(p.Data[p.Cursor:], *value)
-			} else {
-				binary.LittleEndian.PutUint64(p.Data[p.Cursor:], *value)
-			}
+			binary.LittleEndian.PutUint64(p.Data[p.Cursor:], uint64(*value))
 		}
 	}
 	p.Cursor += 8
 }
 
-func (p *P) Float32(value *float32) {
+func (p *P) Uint64LE(value *uint64) {
+	if p.enoughLength(8) {
+		if p.Unpack {
+			*value = binary.LittleEndian.Uint64(p.Data[p.Cursor:])
+		} else {
+			binary.LittleEndian.PutUint64(p.Data[p.Cursor:], *value)
+		}
+	}
+	p.Cursor += 8
+}
+
+func (p *P) Float32LE(value *float32) {
 	if p.enoughLength(4) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = math.Float32frombits(binary.BigEndian.Uint32(p.Data[p.Cursor:]))
-			} else {
-				*value = math.Float32frombits(binary.LittleEndian.Uint32(p.Data[p.Cursor:]))
-			}
+			*value = math.Float32frombits(binary.LittleEndian.Uint32(p.Data[p.Cursor:]))
 		} else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint32(p.Data[p.Cursor:], math.Float32bits(*value))
-			} else {
-				binary.LittleEndian.PutUint32(p.Data[p.Cursor:], math.Float32bits(*value))
-			}
+			binary.LittleEndian.PutUint32(p.Data[p.Cursor:], math.Float32bits(*value))
 		}
 	}
 	p.Cursor += 4
 }
 
-func (p *P) Float64(value *float64) {
+func (p *P) Float64LE(value *float64) {
 	if p.enoughLength(8) {
 		if p.Unpack {
-			if p.BigEndian {
-				*value = math.Float64frombits(binary.BigEndian.Uint64(p.Data[p.Cursor:]))
-			} else {
-				*value = math.Float64frombits(binary.LittleEndian.Uint64(p.Data[p.Cursor:]))
-			}
-    } else {
-			if p.BigEndian {
-				binary.BigEndian.PutUint64(p.Data[p.Cursor:], math.Float64bits(*value))
-			} else {
-				binary.LittleEndian.PutUint64(p.Data[p.Cursor:], math.Float64bits(*value))
-			}
+			*value = math.Float64frombits(binary.LittleEndian.Uint64(p.Data[p.Cursor:]))
+		} else {
+			binary.LittleEndian.PutUint64(p.Data[p.Cursor:], math.Float64bits(*value))
+		}
+	}
+	p.Cursor += 8
+}
+
+// Big Endian
+
+func (p *P) Int16BE(value *int16) {
+	if p.enoughLength(2) {
+		if p.Unpack {
+			*value = int16(binary.BigEndian.Uint16(p.Data[p.Cursor:]))
+		} else {
+			binary.BigEndian.PutUint16(p.Data[p.Cursor:], uint16(*value))
+		}
+	}
+	p.Cursor += 2
+}
+func (p *P) Uint16BE(value *uint16) {
+	if p.enoughLength(2) {
+		if p.Unpack {
+			*value = binary.BigEndian.Uint16(p.Data[p.Cursor:])
+		} else {
+			binary.BigEndian.PutUint16(p.Data[p.Cursor:], *value)
+		}
+	}
+	p.Cursor += 2
+}
+
+func (p *P) Int32BE(value *int32) {
+	if p.enoughLength(4) {
+		if p.Unpack {
+			*value = int32(binary.BigEndian.Uint32(p.Data[p.Cursor:]))
+		} else {
+			binary.BigEndian.PutUint32(p.Data[p.Cursor:], uint32(*value))
+		}
+	}
+	p.Cursor += 4
+}
+func (p *P) Uint32BE(value *uint32) {
+	if p.enoughLength(4) {
+		if p.Unpack {
+			*value = binary.BigEndian.Uint32(p.Data[p.Cursor:])
+		} else {
+			binary.BigEndian.PutUint32(p.Data[p.Cursor:], *value)
+		}
+	}
+	p.Cursor += 4
+}
+
+func (p *P) Int64BE(value *int64) {
+	if p.enoughLength(8) {
+		if p.Unpack {
+			*value = int64(binary.BigEndian.Uint64(p.Data[p.Cursor:]))
+		} else {
+			binary.BigEndian.PutUint64(p.Data[p.Cursor:], uint64(*value))
+		}
+	}
+	p.Cursor += 8
+}
+
+func (p *P) Uint64BE(value *uint64) {
+	if p.enoughLength(8) {
+		if p.Unpack {
+			*value = binary.BigEndian.Uint64(p.Data[p.Cursor:])
+		} else {
+			binary.BigEndian.PutUint64(p.Data[p.Cursor:], *value)
+		}
+	}
+	p.Cursor += 8
+}
+
+func (p *P) Float32BE(value *float32) {
+	if p.enoughLength(4) {
+		if p.Unpack {
+			*value = math.Float32frombits(binary.BigEndian.Uint32(p.Data[p.Cursor:]))
+		} else {
+			binary.BigEndian.PutUint32(p.Data[p.Cursor:], math.Float32bits(*value))
+		}
+	}
+	p.Cursor += 4
+}
+
+func (p *P) Float64BE(value *float64) {
+	if p.enoughLength(8) {
+		if p.Unpack {
+			*value = math.Float64frombits(binary.BigEndian.Uint64(p.Data[p.Cursor:]))
+		} else {
+			binary.BigEndian.PutUint64(p.Data[p.Cursor:], math.Float64bits(*value))
 		}
 	}
 	p.Cursor += 8

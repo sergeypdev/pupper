@@ -23,19 +23,19 @@ type data struct {
 func (d *data) Pup(p pupper.P) int {
 	p.Int8(&d.i8)
 	p.Uint8(&d.u8)
-	p.Int16(&d.i16)
-	p.Uint16(&d.u16)
-	p.Int32(&d.i32)
-	p.Uint32(&d.u32)
-	p.Int64(&d.i64)
-	p.Uint64(&d.u64)
-	p.Float32(&d.f32)
-	p.Float64(&d.f64)
+	p.Int16LE(&d.i16)
+	p.Uint16LE(&d.u16)
+	p.Int32LE(&d.i32)
+	p.Uint32LE(&d.u32)
+	p.Int64LE(&d.i64)
+	p.Uint64LE(&d.u64)
+	p.Float32LE(&d.f32)
+	p.Float64LE(&d.f64)
 	return p.Len()
 }
 
 func TestCalcLength(t *testing.T) {
-	result := data{
+	data1 := data{
 		i8:  -50,
 		u8:  math.MaxUint8,
 		i16: -1024,
@@ -48,21 +48,16 @@ func TestCalcLength(t *testing.T) {
 		f64: math.MaxFloat64,
 	}
 
-	// Calculate size, not writing anything yet
-	dataLen := result.Pup(pupper.Count())
-
-	encodedBytes := make([]byte, dataLen)
-  p := pupper.PackLittleEndian(encodedBytes)
+	encodedBytes := make([]byte, data1.Pup(pupper.Count()))
 	// Encoding
-	result.Pup(p)
+	data1.Pup(pupper.Pack(encodedBytes))
 
 	var result2 data
-	p = pupper.UnpackLittleEndian(encodedBytes)
 	// Decoding
-	result2.Pup(p)
+	result2.Pup(pupper.Unpack(encodedBytes))
 
-	if result != result2 {
-		t.Errorf("Decoding the encoded value yields a different result\nEncoded:\t%v\nDecoded:\t%v\n", result, result2)
+	if data1 != result2 {
+		t.Errorf("Decoding the encoded value yields a different result\nEncoded:\t%v\nDecoded:\t%v\n", data1, result2)
 	}
 }
 
@@ -78,16 +73,16 @@ type versionedData struct {
 func (vd *versionedData) PupV1(p pupper.P) int {
 	// Specify current version
 	version := uint32(1)
-	p.Uint32(&version)
-	p.Int32(&vd.field)
+	p.Uint32LE(&version)
+	p.Int32LE(&vd.field)
 	return p.Len()
 }
 
 func (vd *versionedData) PupV2(p pupper.P) int {
 	// Specify current version
 	version := uint32(2)
-	p.Uint32(&version)
-	p.Int32(&vd.field)
+	p.Uint32LE(&version)
+	p.Int32LE(&vd.field)
 	if version >= 2 {
 		p.Int8(&vd.fieldAddedV2)
 	}
@@ -97,13 +92,13 @@ func (vd *versionedData) PupV2(p pupper.P) int {
 func (vd *versionedData) PupV3(p pupper.P) int {
 	// Specify current version
 	version := uint32(3)
-	p.Uint32(&version)
-	p.Int32(&vd.field)
+	p.Uint32LE(&version)
+	p.Int32LE(&vd.field)
 	if version >= 2 {
 		p.Int8(&vd.fieldAddedV2)
 	}
 	if version >= 3 {
-		p.Int16(&vd.fieldAddedV3)
+		p.Int16LE(&vd.fieldAddedV3)
 	}
 	return p.Len()
 }
@@ -113,10 +108,10 @@ func TestVersionUpgrade(t *testing.T) {
 		field: 1,
 	}
 	encodedDataV1 := make([]byte, dataV1.PupV1(pupper.Count()))
-	dataV1.PupV1(pupper.PackLittleEndian(encodedDataV1))
+	dataV1.PupV1(pupper.Pack(encodedDataV1))
 
 	var dataV2 versionedData
-	dataV2.PupV2(pupper.UnpackLittleEndian(encodedDataV1))
+	dataV2.PupV2(pupper.Unpack(encodedDataV1))
 
 	if dataV1 != dataV2 {
 		t.Errorf("Decoding V1 data with V2 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV1, dataV2)
@@ -124,10 +119,10 @@ func TestVersionUpgrade(t *testing.T) {
 
 	dataV2.fieldAddedV2 = 2
 	encodedDataV2 := make([]byte, dataV2.PupV2(pupper.Count()))
-	dataV2.PupV2(pupper.PackLittleEndian(encodedDataV2))
+	dataV2.PupV2(pupper.Pack(encodedDataV2))
 
 	var dataV3 versionedData
-	dataV3.PupV3(pupper.UnpackLittleEndian(encodedDataV2))
+	dataV3.PupV3(pupper.Unpack(encodedDataV2))
 
 	if dataV2 != dataV3 {
 		t.Errorf("Decoding V2 data with V3 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV2, dataV3)
@@ -135,12 +130,12 @@ func TestVersionUpgrade(t *testing.T) {
 
 	dataV3.fieldAddedV3 = 3
 	encodedDataV3 := make([]byte, dataV3.PupV3(pupper.Count()))
-	dataV3.PupV3(pupper.PackLittleEndian(encodedDataV3))
+	dataV3.PupV3(pupper.Pack(encodedDataV3))
 
 	// Checking backwards compat
 
 	dataV2 = versionedData{}
-	dataV2.PupV2(pupper.UnpackLittleEndian(encodedDataV3))
+	dataV2.PupV2(pupper.Unpack(encodedDataV3))
 
 	expectedDataV2 := versionedData{field: 1, fieldAddedV2: 2}
 	if dataV2 != expectedDataV2 {
@@ -148,7 +143,7 @@ func TestVersionUpgrade(t *testing.T) {
 	}
 
   dataV1 = versionedData{}
-  dataV1.PupV1(pupper.UnpackLittleEndian(encodedDataV3))
+  dataV1.PupV1(pupper.Unpack(encodedDataV3))
 
   expectedDataV1 := versionedData{field: 1}
   if dataV1 != expectedDataV1 {
