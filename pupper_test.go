@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/sergeypdev/pupper/pkg/pupper"
+	"github.com/sergeypdev/pupper"
 )
 
 type data struct {
