@@ -20,7 +20,7 @@ type data struct {
 	f64 float64
 }
 
-func (d *data) Pup(p pupper.P) int {
+func (d *data) Pup(p *pupper.P) int {
 	p.Int8(&d.i8)
 	p.Uint8(&d.u8)
 	p.Int16LE(&d.i16)
@@ -67,10 +67,10 @@ type versionedData struct {
 	fieldAddedV3 int16
 }
 
-// These will not be separate functions, simulating data format
+// These will not be separate functions, here I'm simulating data format
 // evolution over time. In real projects you would have only one Pup()
 // function that is the latest version
-func (vd *versionedData) PupV1(p pupper.P) int {
+func (vd *versionedData) PupV1(p *pupper.P) int {
 	// Specify current version
 	version := uint32(1)
 	p.Uint32LE(&version)
@@ -78,7 +78,7 @@ func (vd *versionedData) PupV1(p pupper.P) int {
 	return p.Len()
 }
 
-func (vd *versionedData) PupV2(p pupper.P) int {
+func (vd *versionedData) PupV2(p *pupper.P) int {
 	// Specify current version
 	version := uint32(2)
 	p.Uint32LE(&version)
@@ -89,7 +89,7 @@ func (vd *versionedData) PupV2(p pupper.P) int {
 	return p.Len()
 }
 
-func (vd *versionedData) PupV3(p pupper.P) int {
+func (vd *versionedData) PupV3(p *pupper.P) int {
 	// Specify current version
 	version := uint32(3)
 	p.Uint32LE(&version)
@@ -148,5 +148,16 @@ func TestVersionUpgrade(t *testing.T) {
   expectedDataV1 := versionedData{field: 1}
   if dataV1 != expectedDataV1 {
 		t.Errorf("Decoding V3 data with V1 Pup produced a different result\nEncoded:\t%v\nDecoded:\t%v\n", dataV1, expectedDataV1)
+  }
+}
+
+func BenchmarkPupper(b *testing.B) {
+  var d data
+  size := d.Pup(pupper.Count())
+  bytes := make([]byte, size)
+  for i := 0; i < b.N; i++ {
+    for j := 0; j < 1000; j++ {
+      d.Pup(pupper.Pack(bytes))
+    }
   }
 }
